@@ -121,36 +121,108 @@
 
 
 
+// const express = require('express');
+// const app = express();
+
+// // Middleware to parse JSON payloads
+// app.use(express.json());
+
+// // Sample in-memory data store for to-do tasks
+// let tasks = [];
+
+// // Route to get all tasks
+// app.get('/tasks', (req, res) => {
+//     res.json(tasks);
+// });
+
+// // Route to add a new task
+// app.post('/tasks', (req, res) => {
+//     const task = req.body;
+//     tasks.push(task);
+//     res.status(201).json(task);
+// });
+
+// // Route to delete a task by id
+// app.delete('/tasks/:id', (req, res) => {
+//     const taskId = parseInt(req.params.id, 10);
+//     tasks = tasks.filter(task => task.id !== taskId);
+//     res.status(204).send();
+// });
+
+// // Start the server
+// app.listen(3000, () => {
+//     console.log('Server is running on port 3000');
+// });
+
+
+//ROUTE HANDLING
+
+
 const express = require('express');
 const app = express();
+const path = require('path');
+const cors = require('cors')
+const PORT = process.env.PORT || 3500;
 
-// Middleware to parse JSON payloads
-app.use(express.json());
 
-// Sample in-memory data store for to-do tasks
-let tasks = [];
+//Middleware
 
-// Route to get all tasks
-app.get('/tasks', (req, res) => {
-    res.json(tasks);
-});
+//third party
+app.use(cors())
 
-// Route to add a new task
-app.post('/tasks', (req, res) => {
-    const task = req.body;
-    tasks.push(task);
-    res.status(201).json(task);
-});
+//Built in
+app.use(express.urlencoded({extended:false}))
+app.use(express.json())
+app.use('/',express.static(path.join(__dirname,'./public')))
+app.use('/subdir',express.static(path.join(__dirname,'./public')))
 
-// Route to delete a task by id
-app.delete('/tasks/:id', (req, res) => {
-    const taskId = parseInt(req.params.id, 10);
-    tasks = tasks.filter(task => task.id !== taskId);
-    res.status(204).send();
-});
+//Use Defined
+// app.use(logger)
 
-// Start the server
-app.listen(3000, () => {
-    console.log('Server is running on port 3000');
-});
 
+//router
+app.use('/', require('./routes/root'))
+app.use('/subdir', require('./routes/subdir'))
+
+
+
+app.get('^/$|/index(.html)?', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'index.html'))
+})
+app.get('/new-page(.html)?', (req, res) => {
+    res.sendFile(path.join(__dirname, 'views', 'new-page.html'))
+})
+app.get('/old-page(.html)?', (req, res) => {
+    res.redirect(301, 'new-page.html'); // if 301 not mention 302 will be consideres which is temperory
+})
+app.get('/hello(.html)?', (req, res, next) => {
+    console.log("Hello html started working");
+    next()
+}, (req, res) => {
+    res.send("Hello Html")
+}
+)
+
+
+// // Chaining
+
+// const one = (req,res, next) => {
+//     console.log("One");
+//     next();
+// }
+// const two = (req,res, next) => {
+//     console.log("Two");
+//     next();
+// }
+// const three = (req,res) => {
+//     console.log("Three");
+//     res.send("One Two Three");
+// }
+// app.get('/chain(.html)?',[one,two,three])
+// app.get('/*', (req, res) => {
+//     res.status(404).sendFile(path.join(__dirname, 'views', '404.html'))
+// })
+
+
+
+app.listen(PORT, () => console.log(`Server ${PORT} `))
